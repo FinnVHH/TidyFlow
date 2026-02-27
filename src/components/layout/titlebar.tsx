@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { MouseEvent } from "react";
 import { Minus, Square, X } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -13,8 +14,6 @@ const CONTROL_BUTTON_CLASS =
 export function Titlebar() {
   async function startDragging(event: MouseEvent<HTMLElement>) {
     if (!isTauriRuntime() || event.button !== 0) return;
-    const target = event.target as HTMLElement | null;
-    if (target?.closest("[data-no-drag]")) return;
     await getCurrentWindow().startDragging();
   }
 
@@ -41,23 +40,34 @@ export function Titlebar() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-sm">
-      <div
-        data-tauri-drag-region
-        className="flex h-11 items-center justify-between px-3"
-        onMouseDown={startDragging}
-      >
-        <div className="flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-emerald-500" />
+      <div className="flex h-11 items-center justify-between px-3">
+        <div
+          data-tauri-drag-region
+          className="flex flex-1 items-center gap-2"
+          onMouseDown={startDragging}
+        >
+          <Image src="/branding/tidyflow-icon.png" alt="TidyFlow" width={16} height={16} />
           <span className="text-sm font-medium tracking-wide">TidyFlow</span>
         </div>
-        <div className="flex items-center gap-1" data-no-drag>
-          <button aria-label="Minimize" className={CONTROL_BUTTON_CLASS} onClick={minimize}>
+        <div className="ml-3 flex items-center gap-1">
+          <button
+            type="button"
+            aria-label="Minimize"
+            className={CONTROL_BUTTON_CLASS}
+            onClick={minimize}
+          >
             <Minus className="h-4 w-4" />
           </button>
-          <button aria-label="Maximize" className={CONTROL_BUTTON_CLASS} onClick={maximize}>
+          <button
+            type="button"
+            aria-label="Maximize"
+            className={CONTROL_BUTTON_CLASS}
+            onClick={maximize}
+          >
             <Square className="h-3.5 w-3.5" />
           </button>
           <button
+            type="button"
             aria-label="Close"
             className={cn(CONTROL_BUTTON_CLASS, "hover:bg-red-600 hover:text-white")}
             onClick={close}

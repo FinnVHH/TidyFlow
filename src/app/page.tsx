@@ -1,142 +1,80 @@
-"use client";
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, FolderTree, ShieldCheck, Sparkles } from "lucide-react";
 
-import { toast } from "sonner";
-
-import { FolderPicker } from "@/components/features/folder-picker";
-import { OperationToolbar } from "@/components/features/operation-toolbar";
-import { PreviewPane } from "@/components/features/preview-pane";
-import { RuleBuilder } from "@/components/features/rule-builder";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { formatBytes } from "@/lib/format";
-import { isTauriRuntime } from "@/lib/tauri";
-import { useOrganizer } from "@/hooks/use-organizer";
+
+const HIGHLIGHTS = [
+  {
+    icon: FolderTree,
+    title: "Smart Organization Rules",
+    description: "Combine file type, date hierarchy, and custom extension mapping.",
+  },
+  {
+    icon: Sparkles,
+    title: "Dry Run Preview",
+    description: "Inspect every planned move before changing any file on disk.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Safe Rollback",
+    description: "Every move is logged so the last operation can be undone in one click.",
+  },
+];
 
 export default function HomePage() {
-  const {
-    folderPath,
-    entries,
-    rule,
-    duplicateHandling,
-    previewResult,
-    isWorking,
-    lastError,
-    setRule,
-    setDuplicateHandling,
-    selectFolder,
-    runPreview,
-    runApply,
-    runUndo,
-  } = useOrganizer();
-
-  async function handlePreview() {
-    try {
-      const result = await runPreview();
-      if (result) {
-        toast.success(`Preview ready: ${result.moved.length} moves planned.`);
-      }
-    } catch {
-      toast.error("Failed to generate preview.");
-    }
-  }
-
-  async function handleApply() {
-    try {
-      const result = await runApply();
-      if (result) {
-        toast.success(`Organized ${result.moved.length} files.`);
-      }
-    } catch {
-      toast.error("Organization failed.");
-    }
-  }
-
-  async function handleUndo() {
-    try {
-      const result = await runUndo();
-      if (result) {
-        toast.success(`Rollback complete: ${result.restored.length} files restored.`);
-      }
-    } catch {
-      toast.error("Undo failed.");
-    }
-  }
-
   return (
-    <div className="mx-auto flex h-full max-w-7xl flex-col gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>TidyFlow Organizer</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <FolderPicker
-            folderPath={folderPath}
-            onFolderSelected={selectFolder}
-            disabled={isWorking}
-          />
-          {!isTauriRuntime() && (
-            <p className="text-sm text-destructive">
-              Folder selection requires the Tauri desktop runtime.
+    <div className="mx-auto flex h-full max-w-6xl flex-col gap-6">
+      <Card className="overflow-hidden border-primary/30 bg-gradient-to-br from-card to-muted/40">
+        <CardContent className="grid items-center gap-6 p-8 md:grid-cols-[1fr_auto]">
+          <div className="space-y-4">
+            <Image
+              src="/branding/tidyflow-logo.png"
+              alt="TidyFlow"
+              width={260}
+              height={84}
+              priority
+            />
+            <p className="max-w-2xl text-sm text-muted-foreground">
+              Organize cluttered folders with predictable rules, preview every move, and
+              rollback instantly if needed.
             </p>
-          )}
-          {lastError && <p className="text-sm text-destructive">{lastError}</p>}
+            <Button asChild size="lg">
+              <Link href="/organizer">
+                Open Organizer
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+          <Image
+            src="/branding/tidyflow-icon.png"
+            alt="TidyFlow icon"
+            width={124}
+            height={124}
+            className="rounded-2xl border border-border/50 bg-background/80 p-4"
+            priority
+          />
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 xl:grid-cols-[460px_1fr]">
-        <div className="space-y-6">
-          <RuleBuilder
-            rule={rule}
-            duplicateHandling={duplicateHandling}
-            onRuleChange={setRule}
-            onDuplicateHandlingChange={setDuplicateHandling}
-          />
-          <Card>
-            <CardHeader>
-              <CardTitle>Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <OperationToolbar
-                isWorking={isWorking}
-                canPreview={Boolean(folderPath)}
-                canApply={Boolean(folderPath)}
-                onPreview={handlePreview}
-                onApply={handleApply}
-                onUndo={handleUndo}
-              />
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Current Folder Snapshot</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                {entries.length} files scanned, total size{" "}
-                {formatBytes(entries.reduce((sum, file) => sum + file.size, 0))}
-              </p>
-              <Separator />
-              <div className="max-h-60 space-y-2 overflow-auto text-sm">
-                {entries.slice(0, 40).map((entry) => (
-                  <div key={entry.path} className="rounded-md border px-3 py-2">
-                    <p className="font-medium">{entry.name}</p>
-                    <p className="text-xs text-muted-foreground">{entry.path}</p>
-                  </div>
-                ))}
-                {entries.length > 40 && (
-                  <p className="text-xs text-muted-foreground">
-                    Showing first 40 files.
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <PreviewPane result={previewResult} />
-        </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        {HIGHLIGHTS.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Card key={item.title}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Icon className="h-4 w-4 text-primary" />
+                  {item.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">{item.description}</p>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
