@@ -11,6 +11,8 @@ interface PreviewPaneProps {
   result: OrganizeResult | null;
 }
 
+const MAX_RENDER_ITEMS = 200;
+
 export function PreviewPane({ result }: PreviewPaneProps) {
   if (!result) {
     return (
@@ -37,7 +39,7 @@ export function PreviewPane({ result }: PreviewPaneProps) {
               Moves
             </h4>
             <div className="space-y-2">
-              {result.moved.map((move) => (
+              {result.moved.slice(0, MAX_RENDER_ITEMS).map((move) => (
                 <div
                   key={`${move.from}-${move.to}-${move.timestamp}`}
                   className="rounded-md border bg-card p-3 text-sm"
@@ -52,6 +54,11 @@ export function PreviewPane({ result }: PreviewPaneProps) {
                   </p>
                 </div>
               ))}
+              {result.moved.length > MAX_RENDER_ITEMS && (
+                <p className="text-xs text-muted-foreground">
+                  Showing first {MAX_RENDER_ITEMS} of {result.moved.length} moves.
+                </p>
+              )}
             </div>
           </section>
 
@@ -64,7 +71,12 @@ export function PreviewPane({ result }: PreviewPaneProps) {
               {result.skipped.length === 0 ? (
                 <p>No skipped files.</p>
               ) : (
-                result.skipped.map((item) => <p key={item.path}>{item.path}</p>)
+                result.skipped
+                  .slice(0, MAX_RENDER_ITEMS)
+                  .map((item) => <p key={item.path}>{item.path}</p>)
+              )}
+              {result.skipped.length > MAX_RENDER_ITEMS && (
+                <p className="text-xs">Showing first {MAX_RENDER_ITEMS} skipped items.</p>
               )}
             </div>
           </section>
@@ -78,7 +90,14 @@ export function PreviewPane({ result }: PreviewPaneProps) {
               {result.errors.length === 0 ? (
                 <p className="text-muted-foreground">No errors.</p>
               ) : (
-                result.errors.map((error) => <p key={error}>{error}</p>)
+                result.errors
+                  .slice(0, MAX_RENDER_ITEMS)
+                  .map((error, index) => <p key={`${error}-${index}`}>{error}</p>)
+              )}
+              {result.errors.length > MAX_RENDER_ITEMS && (
+                <p className="text-xs text-muted-foreground">
+                  Showing first {MAX_RENDER_ITEMS} errors.
+                </p>
               )}
             </div>
           </section>

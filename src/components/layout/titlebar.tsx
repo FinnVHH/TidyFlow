@@ -1,5 +1,6 @@
 "use client";
 
+import type { MouseEvent } from "react";
 import { Minus, Square, X } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
@@ -10,6 +11,13 @@ const CONTROL_BUTTON_CLASS =
   "inline-flex h-8 w-10 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground";
 
 export function Titlebar() {
+  async function startDragging(event: MouseEvent<HTMLElement>) {
+    if (!isTauriRuntime() || event.button !== 0) return;
+    const target = event.target as HTMLElement | null;
+    if (target?.closest("[data-no-drag]")) return;
+    await getCurrentWindow().startDragging();
+  }
+
   async function minimize() {
     if (!isTauriRuntime()) return;
     await getCurrentWindow().minimize();
@@ -33,12 +41,16 @@ export function Titlebar() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-sm">
-      <div data-tauri-drag-region className="flex h-11 items-center justify-between px-3">
+      <div
+        data-tauri-drag-region
+        className="flex h-11 items-center justify-between px-3"
+        onMouseDown={startDragging}
+      >
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-emerald-500" />
           <span className="text-sm font-medium tracking-wide">TidyFlow</span>
         </div>
-        <div className="flex items-center gap-1" data-tauri-drag-region={false}>
+        <div className="flex items-center gap-1" data-no-drag>
           <button aria-label="Minimize" className={CONTROL_BUTTON_CLASS} onClick={minimize}>
             <Minus className="h-4 w-4" />
           </button>

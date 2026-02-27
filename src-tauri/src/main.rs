@@ -11,6 +11,18 @@ use std::{
 };
 use walkdir::WalkDir;
 
+const MAX_SCAN_ENTRIES: usize = 50_000;
+const SKIP_DIR_NAMES: [&str; 8] = [
+  ".git",
+  ".next",
+  "node_modules",
+  "dist",
+  "build",
+  "target",
+  ".idea",
+  ".vscode",
+];
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 struct FileEntry {
@@ -277,14 +289,32 @@ fn operation_log_path(root_path: &str) -> PathBuf {
     .join("last-operation.json")
 }
 
+fn should_skip_dir(path: &Path) -> bool {
+  let Some(name) = path.file_name().map(|value| value.to_string_lossy().to_lowercase()) else {
+    return false;
+  };
+  name == ".tidyflow" || SKIP_DIR_NAMES.contains(&name.as_str())
+}
+
 #[tauri::command]
 fn scan_folder(path: String) -> Vec<FileEntry> {
-  WalkDir::new(path)
+  let mut entries: Vec<FileEntry> = Vec::new();
+  let iter = WalkDir::new(path)
     .into_iter()
+    .filter_entry(|entry| !entry.file_type().is_dir() || !should_skip_dir(entry.path()))
     .filter_map(Result::ok)
-    .filter(|entry| entry.file_type().is_file())
-    .filter_map(|entry| entry_from_path(entry.path()))
-    .collect()
+    .filter(|entry| entry.file_type().is_file());
+
+  for entry in iter {
+    if entries.len() >= MAX_SCAN_ENTRIES {
+      break;
+    }
+    if let Some(item) = entry_from_path(entry.path()) {
+      entries.push(item);
+    }
+  }
+
+  entries
 }
 
 #[tauri::command]
